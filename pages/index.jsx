@@ -71,39 +71,64 @@ const Home = () => {
   // TODO: Prepare the application to receive a new Injury Report.
   const onNewReportClick = () => {
     // Set the mode to create, clear the selected report and toggle the modal.
-  
+    setSelected();
+    setMode("create");
+    toggleModal(true)
+    
   };
 
   // TODO: When you click on the report, set the report you clicked on as the selected one and change the
   // mode to view.
   const onReportClick = (r) => {
     // Set the selected report, change mode to view and toggle modal.
-    // ...
+    setSelected(r);
+    setMode("view");
+    toggleModal(true);
   };
 
   // TODO: Save new and updated reports.
   const onSaveReport = (e) => {
     // TODO: prevent default
-    // ..
+   e.preventDefault();
 
     // The form element is currently uncontrolled but you can change it if you want.
     // ...
 
     if (mode == "create") {
       // TODO: A new report will need an Id and a Date on the CreatedAt property.
-      // ...
+      const newReport = {
+        Id: reports.length + 1,
+        CreatedAt: new Date(),
+        ...selected,
+      }
+      setReports([...reports, newReport]);
+
     } else {
       // Here you will need to find and update the report within the array of reports.
-      // ...
+      setMode("edit");
+      setReports(reports.map((report) => {
+        if (report.Id === selected.Id) {
+          return selected;
+        } else {
+          return report;
+        }
+      }));
     }
     // TODO: Don't forget to close the modal and reset the form.
-    // ...
+    toggleModal(false);
+    setSelected();
+
   };
 
   // TODO: Ask the user if they are sure they want to remove reports beforehand.
   const onDeleteReport = (r) => {
+   if (window.confirm("Are you sure you want to delete this report?")) {  
+    setMode("delete");
+    setSelected(r);
+    setReports(reports.filter((report) => report.Id !== r.Id));
+    }
     // If users confirm, remove the report from the array of reports.
-    // ...
+
   };
 
   return (
@@ -136,6 +161,32 @@ const Home = () => {
           </thead>
           <tbody>
             {/* TODO: Loop through the reports and display them along with view, edit and delete buttons. */}
+            {reports.map((r) => (
+              <tr key={r.Id} className="border-b">
+                <td>{r.Id}</td>
+                <td>{r.Department.Name}</td>
+                <td>{r.Status}</td>
+                <td>{r.Type}</td>
+                <td>{r.CreatedAt.toLocaleString()}</td>
+                <td className="p-4">
+                  <button
+                    className="p-2 m-2 bg-black font-semibold text-white rounded"
+                    onClick={() => onReportClick(r)}>
+                    View
+                  </button>
+                  <button
+                    className="p-2 m-2 bg-black font-semibold text-white rounded"
+                    onClick={() => onReportClick(r)}>
+                    Edit
+                  </button>
+                  <button
+                    className="p-2 m-2 bg-black font-semibold text-white rounded"
+                    onClick={() => onDeleteReport(r)}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
 
@@ -160,6 +211,12 @@ const Home = () => {
                       className="border p-2 rounded w-full border-gray-300"
                       name="Status"
                       defaultValue={selected?.Status ?? ""}
+                      onChange={(e) => {
+                        setSelected({
+                          ...selected,
+                          Status: e.target.value,
+                        });
+                      }}
                     >
                       <option disabled value="">
                         Select one
@@ -178,6 +235,14 @@ const Home = () => {
                       className="border p-2 rounded w-full border-gray-300"
                       name="DepartmentId"
                       defaultValue={selected?.DepartmentId ?? ""}
+                      onChange={(e) => {
+                        console.log(e.target.value)
+                        setSelected({
+                          ...selected,
+                          DepartmentId: parseInt(e.target.value),
+                          Department: departments.find((d) => d.Id === parseInt(e.target.value))
+                        });
+                      }}
                     >
                       <option disabled value="">
                         Select one
@@ -198,6 +263,12 @@ const Home = () => {
                       className="border border-gray-300 p-2 rounded w-full"
                       name="Type"
                       defaultValue={selected?.Type ?? ""}
+                      onChange={(e) => {
+                        setSelected({
+                          ...selected,
+                          Type: e.target.value,
+                        });
+                      }}
                     >
                       <option disabled value="">
                         Select one
@@ -218,6 +289,12 @@ const Home = () => {
                       className="border-gray-300 rounded"
                       placeholder="The name of the incident."
                       defaultValue={selected?.Name ?? ""}
+                      onChange={(e) => {
+                        setSelected({
+                          ...selected,
+                          Name: e.target.value,
+                        });
+                      }}
                     />
                   </div>
                   <div className="flex flex-col gap-2 text-left">
@@ -230,6 +307,12 @@ const Home = () => {
                       className="border-gray-300 rounded"
                       name="Description"
                       defaultValue={selected?.Description ?? ""}
+                      onChange={(e) => {
+                        setSelected({
+                          ...selected,
+                          Description: e.target.value,
+                        });
+                      }}
                     ></textarea>
                   </div>
                   <div className="flex flex-col gap-2 text-left">
@@ -243,6 +326,12 @@ const Home = () => {
                       className="border-gray-300 rounded"
                       placeholder="Address where the incident happened."
                       defaultValue={selected?.Location ?? ""}
+                      onChange={(e) => {
+                        setSelected({
+                          ...selected,
+                          Location: e.target.value,
+                        });
+                      }}
                     />
                   </div>
                   <div className="flex flex-col gap-2 text-left">
@@ -256,8 +345,15 @@ const Home = () => {
                       className="border-gray-300 rounded"
                       placeholder="When the incident happened."
                       defaultValue={
-                        selected?.DateOfIncident.toJSON().split(".")[0] ?? ""
+                        //selected?.DateOfIncident.toJSON().split(".")[0] ?? ""
+                         selected?.DateOfIncident ?? ""
                       }
+                      onChange={(e) => {
+                        setSelected({
+                          ...selected,
+                          DateOfIncident: e.target.value,
+                        });
+                      }}
                     />
                   </div>
                   <div className="flex justify-end gap-2 p-3">
